@@ -1,0 +1,131 @@
+#1242394-Ahmad Ali-Hasan
+# COMP242 - Time Complexity Analysis
+
+## 1. Stack<T> — Linked List
+
+The Stack is implemented using a linked list, with a `top` pointer.
+
+push(T): O(1) — A new node is created and added directly at the top.
+pop(): O(1)— The top element is removed by moving the `top` pointer to the next node.
+peek(): O(1) — We directly access `top.data`.
+isEmpty(): O(1) — We only need to check whether `top == null`.
+size(): O(1)— The size is stored in a counter, so we can return it directly.
+Memory: O(n) — One node is stored for each element in the stack.
+
+For the undo and redo functionality, each push or pop operation takes O(1). Therefore, one undo or redo action also takes O(1).
+
+---
+
+## 2. Queue<T> — Linked List
+
+The Queue is also implemented using a linked list. It has both `front` and `rear` pointers.
+
+enqueue(T): O(1) — A new node is added directly at the rear using the `rear` pointer.
+dequeue(): O(1) — The element at the front is removed by moving the `front` pointer.
+peek(): O(1) — We directly access `front.data`.
+isEmpty(): O(1) — We check whether `front == null`.
+size(): O(1) — The current size is stored in a counter.
+Memory: O(n) — One node is stored for every element in the queue.
+
+The maintenance queue, waiting queue, and reservation queue all support enqueue and dequeue operations in O(1).
+
+The `processNextReservation` operation can take O(n) because it may need to go through the queue to find the first reservation matching a specific `vehicleId`. The queue is temporarily rotated so that the FIFO order of the remaining reservations is preserved.
+
+---
+
+## 3. AVL Tree — Vehicle Inventory
+
+The AVL tree is used to store and search for vehicles. Since it keeps itself balanced, its main search and update operations are efficient.
+
+insert(Vehicle): O(log n) — The tree is searched like a BST to find the correct position, followed by any required rotations.
+delete(vehicleId): O(log n) — The vehicle is found, deleted, and the tree is rebalanced if necessary.
+find(vehicleId): O(log n) — The search follows the BST property using the `vehicleId`.
+inOrderList(): O(n) — Every node is visited once.
+reverseInOrder(): O(n) — Every node is also visited once, but in descending order.
+getTreeHeight(): O(1) — The height is already stored in the root node, so it does not need to be calculated again.
+
+Each left or right rotation takes O(1) because only a constant number of pointers are changed.
+
+Updating the height and balance of each node also takes O(1).
+
+If there are n vehicles in the AVL tree, the memory usage is O(n) because there is one node for each vehicle.
+
+---
+
+## 4. ArrayList Operations
+
+Customers and transactions are stored using ArrayList.
+
+customers.add(): O(1)  — Adding to the end normally takes constant time. Occasionally, the array needs to be resized, which can take O(n).
+customers.remove(): O(n)— Removing an element may require shifting the elements after it.
+customers.contains(): O(n) — The list may need to be searched from beginning to end.
+transactions.add(): O(1) — Adding to the end is normally constant time.
+transactions.remove(): O(n) — Elements may need to be shifted after removing an item.
+Customer search by ID: O(n) — The customers list is searched linearly.
+Transaction lookup: O(n) — Transactions are also searched using a linear scan.
+
+The project specification does not require customers or transactions to use an AVL tree, so using an `ArrayList` for them is acceptable.
+
+---
+
+## 5. Main System Operations
+
+The main system operations have different time complexities depending on which data structure they use.
+
+### Vehicle Operations
+
+addVehicle(): O(log n) — Inserts the vehicle into the AVL tree and records the undo operation.
+updateVehicle(): O(log n) — Finds the vehicle in the AVL tree and updates it.
+setVehicleStatus(): O(log n) — Finds the vehicle using the AVL tree and changes its status.
+deleteVehicle(): O(log n) — Deletes the vehicle from the AVL tree and records the operation.
+displayVehiclesAsc(): O(n) — Performs an in-order traversal of the AVL tree.
+displayVehiclesDesc(): O(n) — Performs a reverse in-order traversal.
+
+### Customer Operations
+
+addCustomer(): O(1)  — Adds the customer to the list and records the undo operation.
+updateCustomer(): O(n)— The customer must first be found by searching the list.
+deleteCustomer(): O(n) — Finding the customer and removing it from the list both require linear-time operations.
+
+### Service Requests
+
+createServiceRequest(): O(n)— The request is checked for duplicates by converting/searching through the queue before being added.
+processNextRequest(): O(log n) — The request is removed from the queue in O(1), then the related vehicle is found in the AVL tree in O(log n).
+completeService(): O(log n) — The service is recorded in the history, and the vehicle status is updated through the AVL tree.
+
+### Sales, Deposits, and Refunds
+
+createSale / Deposit / Refund: O(n) — A duplicate check is performed before adding the new transaction.
+ The actual add operation is O(1) .
+
+### Undo and Redo
+
+undo(): O(1) — The operation is popped from the undo stack, the previous state is restored, and the operation is pushed onto the redo stack.
+redo(): O(1)— The operation is popped from the redo stack, applied again, and pushed onto the undo stack.
+
+SALE is atomic O(log n + 1): one undo entry covers vehicle AVAILABLE/RESERVED -> SOLD plus the transaction row.
+APPLY_DISCOUNT is O(log n): AVL find plus O(1) price update, undoable via before/after snapshots.
+Maintenance process/complete steps use internal status change with no undo entry, so one user action never splits into two undo steps.
+Per-vehicle history: global Stack<Service> plus Map<vehicleId, Stack<Service>>, push O(1), per-vehicle lookup O(1) for stack + O(k) display.
+Reservation redo preserves FIFO via Queue.insertAt(index) O(n) rotation-free insert.
+
+Note on ArrayList: customers/transactions/file rows/TableView snapshots use ArrayList.
+Stack<T>, Queue<T>, AVL storage use only linked nodes (no java.util.LinkedList/ArrayList inside them).
+
+---
+
+## 6. Summary
+
+ Data Structure :  Operation     :         Time Complexity
+
+ Stack<T>    :    push / pop             :            O(1)
+ Stack<T>    :    peek / isEmpty / size  :           O(1)
+ Queue<T>    :    enqueue / dequeue      :           O(1)
+ Queue<T>    :    peek / isEmpty / size  :           O(1)
+ AVL Tree    :    insert / delete        :       O(log n)
+ AVL Tree    :    find                   :       O(log n)
+ AVL Tree    :    traversal              :           O(n)
+ ArrayList   :    add                    :           O(1)
+ ArrayList   :    remove                 :           O(n)
+ ArrayList   :    search                 :           O(n)
+ Undo / Redo :    undo / redo            :           O(1)
