@@ -1,118 +1,174 @@
 # Car Agency Management System
 
-A data-structures-driven desktop app for managing a car agency's customers, vehicle inventory,
-maintenance workflow, reservations, and financial transactions — built with Java and JavaFX.
-
-Core structures (AVL tree, linked-list Queue, linked-list Stack) are implemented from scratch.
-No `ArrayList`, `LinkedList`, or other built-in collections are used inside the core —
-custom linked structures back everything except the JavaFX table adapters.
+A desktop car agency management application built in **Java** with **JavaFX**, developed as a Data Structures course project. It manages customers, vehicles, and reservations end-to-end — from maintenance requests to sales with automatic status tracking — using custom-built data structures and text-file loading.
 
 ## Features
 
-- **Customers** — add, search, update, delete
-- **Vehicles (AVL inventory)** — ordered by `vehicleId`, ascending/descending traversal, tree height,
-  discount support; status is workflow-driven (`AVAILABLE` / `IN_SERVICE` / `RESERVED` / `SOLD`)
-- **Maintenance** — service requests queue (FIFO), process next (`AVAILABLE` → `IN_SERVICE`),
-  complete service (→ `AVAILABLE`, pushes history stack); request/service IDs auto-generated
-- **Waiting queue** — fair FIFO enqueue/serve/count
-- **Reservations** — per-vehicle FIFO queue for unavailable cars, auto IDs, assign front-first
-- **Transactions** — sale / service-payment / deposit / refund with auto IDs;
-  `SALE → SOLD`, `DEPOSIT → RESERVED`, `REFUND → AVAILABLE`, linked live to the vehicle table
-- **Undo / Redo** — two-stack support for reversible operations (sale/deposit/refund are single atomic entries)
-- **File loading** — `FileChooser` CSV import for customers, vehicles, requests, services, transactions
-- **Validation** — duplicates, bad dates/phones/years, empty queues/stacks, and status rules are all guarded
+### 🚗 Vehicles
+
+- Add, update, and remove vehicles (new cars always enter as `AVAILABLE`)
+
+- Search vehicles by ID
+
+- View all vehicles ascending / descending (AVL in-order traversal)
+
+- AVL tree height display and discount support
+
+- Vehicle status tracking: `AVAILABLE`, `IN_SERVICE`, `RESERVED`, `SOLD` (workflow-driven, never typed by hand)
+
+### 👥 Customers
+
+- Register, update, and remove customer profiles
+
+- Search customers by ID
+
+- Waiting queue with fair FIFO serve and duplicate protection
+
+### 🔧 Maintenance
+
+- Create service requests with automatic IDs (vehicle must exist and be `AVAILABLE`)
+
+- FIFO maintenance queue with front-to-rear display
+
+- Process next request: `AVAILABLE → IN_SERVICE`
+
+- Complete service with automatic IDs: record cost, push history stack, `IN_SERVICE → AVAILABLE`
+
+### 📅 Reservations
+
+- Reserve unavailable vehicles with automatic IDs and full FIFO order per vehicle
+
+- `SOLD` cars can never be reserved; `DEPOSIT` holds a car as `RESERVED`
+
+- Process the front reservation first when the vehicle is ready
+
+### 💰 Transactions
+
+- Create sales, service payments, deposits, and refunds with automatic IDs
+
+- `SALE → SOLD` (amount must equal the current vehicle price), `DEPOSIT → RESERVED`, `REFUND → AVAILABLE`
+
+- Vehicle table follows every transaction automatically
+
+- Single atomic undo entry per sale / deposit / refund
+
+### ↩️ Undo / Redo
+
+- Two-stack undo/redo for reversible operations
+
+- Sale, deposit, refund, reservation, discount, and CRUD operations all reversible
+
+- Maintenance process/complete steps are intentional single workflow actions (no split undo entries)
 
 ## Data Structures
 
-| Structure | Backing | Operations | Complexity |
-|---|---|---|---|
-| `AVL` (`AVL.java`, `AVLNode.java`) | Linked nodes, height-balanced | insert / delete / find | `O(log n)` |
-| `AVL` traversal | In-order / reverse in-order | ascending / descending, height | `O(n)` / `O(1)` cached |
-| `Queue<T>` (`Queue.java`) | Linked `front`/`rear` | enqueue / dequeue / peek / size | `O(1)` |
-| `Stack<T>` (`Stack.java`) | Linked `top` | push / pop / peek / size | `O(1)` |
-| `SimpleLinkedList<T>` | Singly linked | add / remove / get / contains | `O(1)` add, `O(n)` search/remove |
-| Undo / Redo | Two `Stack<Operation>` | undo / redo | `O(1)` |
+This is a Data Structures project — all collections are implemented **from scratch**, without using `java.util` collection classes in the core:
 
-Business rules worth knowing:
+| Structure | Implementation | Used For |
+| --- | --- | --- |
+| `AVL` | Balanced binary search tree keyed by `vehicleId` | Vehicle inventory |
+| `Queue<T>` | Linked list with `front`/`rear` pointers | Maintenance queue, waiting queue, reservation queue |
+| `Stack<T>` | Linked list with `top` pointer | Undo stack, redo stack, service-history stack |
+| `SimpleLinkedList<T>` | Singly linked list | Customers, transactions, ID sets, per-vehicle history index |
 
-- New cars enter as `AVAILABLE`. The vehicle file keeps its own statuses on import.
-- A `SALE` amount must equal the current vehicle price (discounts included) — otherwise it is
-  rejected and the car stays unsold. Historical file rows load as records without this check.
-- `DEPOSIT` holds a car (`AVAILABLE` → `RESERVED`); `REFUND` releases it (`RESERVED` → `AVAILABLE`).
-- Only `PENDING` requests enter the maintenance queue; `COMPLETED` / `CANCELLED` / `PROCESSING`
-  rows are skipped with a notice.
-- Customer IDs match numerically, so file ID `09` resolves to customer `9`.
+Core supports insert, search, delete, rotations, height/balance, in-order and reverse in-order traversal, `push`/`pop`/`peek`/`isEmpty`/`size`, and `enqueue`/`dequeue`/`peek`/`isEmpty`/`size`.
 
-See [COMPLEXITY.txt](COMPLEXITY.txt) for the full time-complexity analysis.
-
-## Project Layout
+## Project Structure
 
 ```
 src/
-  Agency.java            # business logic + undo/redo + workflows
-  AVL.java / AVLNode.java# balanced vehicle inventory
-  Queue.java / Stack.java# linked-list FIFO / LIFO
-  SimpleLinkedList.java  # custom list for entities (no java.util in core)
-  Customer/Vehicle/ServiceRequest/Service/Transaction.java
-  FileLoader.java        # CSV import via FileChooser
-  Main.java              # JavaFX UI (7 tabs)
-  MainLauncher.java      # entry point
-customers.txt / vehicles.txt / service_requests.txt / services.txt / transactions.txt
-COMPLEXITY.txt
+├── Main.java              # JavaFX entry point (tabbed UI)
+├── MainLauncher.java      # Launcher
+├── Agency.java            # Business logic + undo/redo + workflows
+├── AVL.java               # Balanced vehicle inventory
+├── AVLNode.java           # AVL tree node
+├── Queue.java             # Custom FIFO queue
+├── Stack.java             # Custom LIFO stack
+├── SimpleLinkedList.java  # Custom singly linked list
+├── Customer.java          # Customer model
+├── Vehicle.java           # Vehicle model
+├── ServiceRequest.java    # Queued maintenance request model
+├── Service.java           # Completed service record model
+├── Transaction.java       # Financial transaction model
+└── FileLoader.java        # CSV loading via FileChooser
 ```
 
-## Run
+## Getting Started
 
-Requires JDK 17+ and the JavaFX SDK (tested with JavaFX 26).
+### Prerequisites
 
-```bash
-# compile
-javac --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls \
-  -d out src/*.java
+- **JDK 26+**
 
-# launch
-java --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls \
-  -cp out MainLauncher
-```
+- **JavaFX SDK** — [download here](https://openjfx.io/)
 
-## Data File Formats (comma-separated, no header required)
+- IntelliJ IDEA (recommended)
+
+### Run in IntelliJ IDEA
+
+1. Clone the repository:
 
 ```
-# customers:  id,name,phone(7-15 digits),address (commas allowed)
-C1,Ahmed,0777123456,Amman
+git clone https://github.com/A7mad-PSE/Car-Agency-Management-System.git
+```
 
-# vehicles:  id,make,model,year,price,color,status
+2. Open the project folder in IntelliJ IDEA.
+
+3. Go to **File → Project Structure → Libraries** and add the JavaFX SDK's `lib` folder as a library.
+
+4. Run `MainLauncher.main()`.
+
+### Run from the command line
+
+```
+# Compile (set PATH_TO_FX to your JavaFX lib directory)
+javac --module-path $PATH_TO_FX --add-modules javafx.controls -d out src/*.java
+
+# Run
+java --module-path $PATH_TO_FX --add-modules javafx.controls -cp out MainLauncher
+```
+
+## Data Persistence
+
+Data is loaded from plain-text CSV files through the toolbar's **FileChooser**. Load them in this order so references resolve. The app validates every line and skips bad rows with a warning instead of crashing.
+
+| File | Format |
+| --- | --- |
+| `customers.txt` | `id,name,phone,address` |
+| `vehicles.txt` | `id,make,model,year,price,color,status` |
+| `service_requests.txt` | `requestId,vehicleId,customerId,type,date,status` |
+| `services.txt` | `serviceId,vehicleId,customerId,type,date,cost,status` |
+| `transactions.txt` | `transactionId,customerId,vehicleId,amount,type,date` |
+
+Example — `vehicles.txt`:
+
+```
 10,Toyota,Corolla,2022,25000,White,AVAILABLE
-
-# service requests:  requestId,vehicleId,customerId,type,date(YYYY-MM-DD),status
-R1,10,C1,Oil Change,2026-09-01,PENDING
-
-# services:  serviceId,vehicleId,customerId,type,date,cost,status
-S1,10,C1,Oil Change,2026-08-10,120.0,COMPLETED
-
-# transactions:  transactionId,customerId,vehicleId,amount,type,date
-T1,C1,10,25000,SALE,2026-08-10
+20,Ford,Focus,2020,18000,Red,SOLD
+30,Honda,Civic,2021,22000,Silver,IN_SERVICE
 ```
 
-Load order matters: **Customers → Vehicles → Service Requests → Services → Transactions**.
+Only `PENDING` requests enter the maintenance queue — `COMPLETED` / `CANCELLED` / `PROCESSING` rows are reported and skipped. File vehicle statuses are preserved as-is.
 
-## UI Tabs
+## Validation Rules
 
-| Tab | Actions |
-|---|---|
-| Customers | Add, search, update, delete, refresh |
-| Vehicles | Add (as `AVAILABLE`), search, update, delete, ascending/descending, height, apply discount |
-| Maintenance | Create request (auto ID), process next, complete service (auto ID), queue + history views |
-| Waiting Queue | Enqueue by customer ID, serve next (FIFO), count |
-| Reservations | Add (auto ID), process next for a vehicle |
-| Transactions | Create sale / service-payment / deposit / refund (auto ID); vehicle status follows |
-| Undo / Redo | Undo, redo, peek next, full refresh |
+- **Vehicle ID / price / year:** positive ID, non-negative price, year between 1886 and next year
 
-## Demo Scenarios
+- **Make / color / customer name:** letters, spaces, hyphens, and apostrophes only
 
-1. **AVL search** — insert `50, 30, 70, 20, 40, 60, 80`, search `60`, change status, confirm the node stays.
-2. **Waiting FIFO** — enqueue Ahmed, Sara, Omar; serve once → Ahmed leaves, Sara is front.
-3. **Maintenance FIFO** — queue Oil Change / Brake Service / Tire Replacement; they process in arrival order.
-4. **Undo** — Add Customer → Add Vehicle → Create Transaction → Apply Discount; one Undo reverses the discount first.
-5. **Integrated flow** — request maintenance for vehicle `60`: search AVL → verify → enqueue →
-   dequeue (`IN_SERVICE`) → complete (history push, `AVAILABLE`).
+- **Phone:** digits only, 7–15 characters
+
+- **Dates:** strict `YYYY-MM-DD` calendar dates (check `2026-09-01`, not `2026-13-99`)
+
+- **Vehicle status:** only `AVAILABLE`, `SOLD`, `IN_SERVICE`, `RESERVED`
+
+- **Sale amount:** must equal the current vehicle price (discounts included)
+
+- **Deposit:** must be within the vehicle price; **refund:** non-zero and within price magnitude
+
+- **No duplicates:** customer, vehicle, request, service, transaction, and reservation IDs are all unique
+
+- **Status rules:** `SOLD` can never be re-sold or reserved; `IN_SERVICE` cannot be sold or assigned
+
+## Author
+
+**Ahmad Ali Hasan** — [A7mad-PSE](https://github.com/A7mad-PSE)
